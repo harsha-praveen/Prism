@@ -1,9 +1,9 @@
 #pragma once
 
 #include "parser.hpp"
-#include<unordered_map>
-#include<sstream>
-#include<cassert>
+#include <unordered_map>
+#include <sstream>
+#include <cassert>
 
 class Generator
 {
@@ -23,6 +23,7 @@ class Generator
                     gen->m_output << "    mov rax, " << term_int_lit->int_lit.value.value() << "\n";
                     gen->push("rax");
                 }
+                
                 void operator()(const NodeTermIdent* term_ident) const
                 {
                     if(!gen->m_vars.contains(term_ident->ident.value.value()))
@@ -35,12 +36,66 @@ class Generator
                     std::stringstream offset;
                     offset << "QWORD [rsp + " << (gen->m_stack_size - var.stack_loc - 1) * 8 << "]\n";
                     gen->push(offset.str());
+                }
 
+                void operator()(const NodeTermParen* term_paren) const
+                {
+                    gen->gen_expr(term_paren->expr);
                 }
             };
 
             TermVisitor visitor{.gen = this};
             std::visit(visitor, term->var);
+        }
+        
+        void gen_bin_expr(const NodeBinExpr* bin_expr)
+        {
+            struct BinExprVisitor
+            {
+                Generator* gen;
+                void operator()(const NodeBinExprSub* sub) const
+                {
+                    gen->gen_expr(sub->rhs);
+                    gen->gen_expr(sub->lhs);
+                    gen->pop("rax");
+                    gen->pop("rbx");
+                    gen->m_output << "    sub rax, rbx\n";
+                    gen->push("rax");
+                }
+
+                void operator()(const NodeBinExprAdd* add) const
+                {
+                    gen->gen_expr(add->rhs);
+                    gen->gen_expr(add->lhs);
+                    gen->pop("rax");
+                    gen->pop("rbx");
+                    gen->m_output << "    add rax, rbx\n";
+                    gen->push("rax");
+                }
+
+                void operator()(const NodeBinExprMulti* multi) const
+                {
+                    gen->gen_expr(multi->rhs);
+                    gen->gen_expr(multi->lhs);
+                    gen->pop("rax");
+                    gen->pop("rbx");
+                    gen->m_output << "    mul rbx\n";
+                    gen->push("rax");
+                }
+                
+                void operator()(const NodeBinExprDiv* div) const
+                {
+                    gen->gen_expr(div->rhs);
+                    gen->gen_expr(div->lhs);
+                    gen->pop("rax");
+                    gen->pop("rbx");
+                    gen->m_output << "    div rbx\n";
+                    gen->push("rax");
+                }
+            };
+
+            BinExprVisitor visitor({.gen = this});
+            std::visit(visitor, bin_expr->var);
         }
 
         void gen_expr(const NodeExpr* expr)
@@ -54,12 +109,7 @@ class Generator
                 }
                 void operator()(const NodeBinExpr* bin_expr) const
                 {
-                    gen->gen_expr(bin_expr->add->lhs);
-                    gen->gen_expr(bin_expr->add->rhs);
-                    gen->pop("rax");
-                    gen->pop("rbx");
-                    gen->m_output << "    add rax, rbx\n";
-                    gen->push("rax");
+                    gen->gen_bin_expr(bin_expr);
                 }
             };
 
@@ -104,7 +154,6 @@ class Generator
                 gen_stmt(stmt);
             }
 
-
             m_output << "    mov rax, 60\n";
             m_output << "    mov rdi, 0\n";
             m_output << "    syscall\n";
@@ -112,7 +161,6 @@ class Generator
         }
 
     private:
-
         void push(const std::string& reg)
         {
             m_output << "    push " << reg << "\n";
@@ -135,4 +183,3 @@ class Generator
         size_t m_stack_size = 0;
         std::unordered_map<std::string, Var> m_vars {};
 };
-
