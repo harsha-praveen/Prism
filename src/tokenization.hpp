@@ -21,10 +21,12 @@ enum class TokenType
     modulo,
     open_curly,
     close_curly,
-    if_
+    if_,
+    elif,
+    else_
 };
 
-std::optional<int> bin_prec(TokenType type)
+inline std::optional<int> bin_prec(const TokenType type)
 {
     switch(type)
     {
@@ -84,6 +86,16 @@ class Tokenizer
                         tokens.push_back({.type = TokenType::if_});
                         buf.clear();
                     }
+                    else if(buf == "elif")
+                    {
+                        tokens.push_back({.type = TokenType::elif});
+                        buf.clear();
+                    }
+                    else if(buf == "else")
+                    {
+                        tokens.push_back({.type = TokenType::else_});
+                        buf.clear();
+                    }
                     else
                     {
                         tokens.push_back({.type = TokenType::ident, .value = buf});
@@ -99,6 +111,39 @@ class Tokenizer
                     }
                     tokens.push_back({.type = TokenType::int_lit, .value = buf});
                     buf.clear();
+                }
+                else if(peek().value() == '/' && peek(1).has_value() && peek(1).value() == '/')
+                {
+                    consume();
+                    consume();
+
+                    while(peek().has_value() && peek().value() != '\n')
+                    {
+                        consume();
+                    }
+                }
+                else if(peek().value() == '/' && peek(1).has_value() && peek(1).value() == '*')
+                {
+                    consume();
+                    consume();
+
+                    while(peek().has_value())
+                    {
+                        if(peek().value() == '*' && peek(1).has_value() && peek(1).value() == '/')
+                        {
+                            break;
+                        }
+                        consume();
+                    }
+
+                    if(peek().has_value())
+                    {
+                        consume();
+                    }
+                    if(peek().has_value())
+                    {
+                        consume();
+                    }
                 }
                 else if(peek().value() == '(')
                 {
@@ -170,19 +215,16 @@ class Tokenizer
         }
 
     private:
-        [[nodiscard]] inline std::optional<char> peek(int offset = 0) const
+        [[nodiscard]] std::optional<char> peek(int offset = 0) const
         {
             if(m_index + offset >= m_src.length())
             {
                 return {};
             }
-            else
-            {
-                return m_src.at(m_index + offset);
-            }
+            return m_src.at(m_index + offset);
         }
         
-        inline char consume()
+        char consume()
         {
             return m_src.at(m_index++);
         }

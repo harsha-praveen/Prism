@@ -1,7 +1,21 @@
 let y = (10 - 2 * 3) / 2;
 let x = 1;
-if (x - 1)
+
+// first
+
+if (0)
 {
-    exit(69);
+    exit(10);
 }
+elif (0)
+{
+    exit(20);
+}
+else
+{
+    exit(30);
+}
+
+/*
 exit(1);
+*/

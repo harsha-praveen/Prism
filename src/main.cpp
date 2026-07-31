@@ -35,11 +35,13 @@ int main(int argc, char* argv[])
         std::cerr << "Invalid Program" << std::endl;
         exit(EXIT_FAILURE);
     }
-
-    Generator generator(prog.value());
+    
     {
-        std::fstream file("../out.asm", std::ios::out);
-        file << generator.gen_prog();
+        Generator generator(prog.value());
+        {
+            std::fstream file("../out.asm", std::ios::out);
+            file << generator.gen_prog();
+        }
     }
 
     system("nasm -felf64 ../out.asm");
