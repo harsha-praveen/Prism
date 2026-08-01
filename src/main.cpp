@@ -1,8 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
-#include <string>
 #include <optional>
+#include <sstream>
 #include <vector>
 
 #include "generation.hpp"
@@ -38,13 +37,12 @@ int main(int argc, char* argv[])
     
     {
         Generator generator(prog.value());
-        {
-            std::fstream file("../out.asm", std::ios::out);
-            file << generator.gen_prog();
-        }
+        std::fstream file("../out.asm", std::ios::out);
+        file << generator.gen_prog();
     }
 
     system("nasm -felf64 ../out.asm");
     system("ld ../out.o -o ../out");
+    
     return EXIT_SUCCESS;
 }
