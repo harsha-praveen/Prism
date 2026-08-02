@@ -64,17 +64,4 @@ Check the program's exit code:
 ```bash
 echo $?
 ```
-
-## Project Structure
-
-```
-Prism/
-├── src/          # Compiler source code
-├── build/        # Build directory
-├── test.pr       # Example Prism program
-├── out.asm       # Generated assembly
-├── out.o         # Object file
-├── out           # Generated executable
-├── CMakeLists.txt
-└── README.md
 ```
