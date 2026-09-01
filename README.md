@@ -63,4 +63,3 @@ Check the program's exit code:
 
 ```bash
 echo $?
-```
